@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Queimadas & Agronegócio — Maranhão 2019–2024</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- ── NAVEGAÇÃO ─────────────────────────────────── -->
+<nav aria-label="Navegação principal">
+  <span class="nav-logo">Análise Ambiental · MA</span>
+  <ul class="nav-links">
+    <li><a href="#focos">Focos</a></li>
+    <li><a href="#agronegocio">Agronegócio</a></li>
+    <li><a href="#correlacao">Correlação</a></li>
+    <li><a href="#tabela">Tabela</a></li>
+  </ul>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════ -->
+<header class="hero" role="banner">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="hero-grain" aria-hidden="true"></div>
+
+  <div class="hero-body">
+    <span class="hero-tag">Maranhão · 2019 – 2024</span>
+    <h1 class="hero-title">
+      Queimadas &amp;<br>
+      <em>Agronegócio</em><br>
+      no Maranhão
+    </h1>
+    <p class="hero-sub">
+      Análise da correlação entre focos de incêndio, emissões de CO₂
+      e a expansão do agronegócio entre 2019 e 2024.
+    </p>
+    <p class="hero-sub">Equipe: Roberto Sousa, Pedro Edu, Micael Carvalho, Pablo Lennon.</p>
+  </div>
+
+  <div class="hero-stats" role="region" aria-label="Indicadores gerais">
+    <div class="hero-stat">
+      <div class="hero-stat-num">{{ total_focos_fmt }}</div>
+      <div class="hero-stat-label">Focos detectados</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">{{ total_co2_fmt }}<sup> Mt</sup></div>
+      <div class="hero-stat-label">CO₂ total emitido</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">{{ pct_agro_medio }}<sup>%</sup></div>
+      <div class="hero-stat-label">Ligado ao agronegócio</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">+23<sup>%</sup></div>
+      <div class="hero-stat-label">Crescimento de focos</div>
+    </div>
+  </div>
+</header>
+
+
+<!-- ═══════════════════════════════════════════════
+     01 · FOCOS
+═══════════════════════════════════════════════ -->
+<section id="focos" class="section" aria-labelledby="titulo-focos">
+  <div class="section-header reveal">
+    <span class="section-num">01</span>
+    <h2 class="section-title" id="titulo-focos">Focos de Queimada</h2>
+  </div>
+
+  <div class="kpi-grid reveal">
+    <div class="kpi">
+      <div class="kpi-icon">🔥</div>
+      <div class="kpi-val">{{ focos[-1] | int | format_br }}</div>
+      <div class="kpi-label">Focos em 2024 (recorde)</div>
+      <span class="kpi-badge badge-up">↑ maior do período</span>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-val">Ago–Set</div>
+      <div class="kpi-label">Pico sazonal histórico</div>
+      <span class="kpi-badge badge-neu">seca intensa</span>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">🌿</div>
+      <div class="kpi-val">~75<span class="unit">%</span></div>
+      <div class="kpi-label">Focos no Cerrado</div>
+      <span class="kpi-badge badge-up">fronteira agrícola</span>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">🌳</div>
+      <div class="kpi-val">+40<span class="unit">%</span></div>
+      <div class="kpi-label">Amazônia — crescimento</div>
+      <span class="kpi-badge badge-up">↑ 2022–2024</span>
+    </div>
+  </div>
+
+  <div class="charts-2 reveal">
+    <div class="chart-card">
+      <div class="chart-card-title">Focos por ano</div>
+      <div class="chart-card-desc">Total anual detectado pelo INPE/BDQueimadas no Maranhão.</div>
+      <div class="chart-wrap"><canvas id="cFocosAno" role="img" aria-label="Focos por ano de 2019 a 2024"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Sazonalidade mensal</div>
+      <div class="chart-card-desc">Distribuição acumulada dos focos por mês (2019–2024).</div>
+      <div class="chart-wrap"><canvas id="cFocosMes" role="img" aria-label="Focos por mês acumulados"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card reveal">
+    <div class="chart-card-title">Focos por bioma — evolução anual</div>
+    <div class="chart-card-desc">Cerrado concentra a maioria; Amazônia cresce de forma preocupante a partir de 2022.</div>
+    <div class="chart-wrap tall"><canvas id="cBioma" role="img" aria-label="Focos por bioma de 2019 a 2024"></canvas></div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     02 · AGRONEGÓCIO
+═══════════════════════════════════════════════ -->
+<section id="agronegocio" class="section section--alt" aria-labelledby="titulo-agro">
+  <div class="section-header reveal">
+    <span class="section-num">02</span>
+    <h2 class="section-title" id="titulo-agro">Relação com o Agronegócio</h2>
+  </div>
+
+  <div class="agro-pair reveal">
+    <div class="agro-card mut">
+      <div class="agro-card-tag">Mudança de Uso da Terra</div>
+      <div class="agro-card-val">535 <span class="unit">Mt CO₂</span></div>
+      <p class="agro-card-desc">
+        Desmatamento para pasto e lavoura — principal emissor do estado.
+        Representa <strong>~96%</strong> do CO₂ ligado ao agronegócio.
+      </p>
+      <div class="chart-wrap compact" style="margin-top:1rem;">
+        <canvas id="cMut" role="img" aria-label="Emissões de Mudança de Uso da Terra por ano"></canvas>
+      </div>
+    </div>
+    <div class="agro-card agro">
+      <div class="agro-card-tag">Agropecuária direta</div>
+      <div class="agro-card-val">−48 <span class="unit">Mt CO₂</span></div>
+      <p class="agro-card-desc">
+        Valor negativo indica sequestro líquido pela vegetação manejada.
+        Este balanço, porém, é anulado quando somado ao desmatamento.
+      </p>
+      <div class="chart-wrap compact" style="margin-top:1rem;">
+        <canvas id="cAgro" role="img" aria-label="Emissões de Agropecuária por ano"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card reveal">
+    <div class="chart-card-title">Composição das emissões de CO₂ por setor — MA</div>
+    <div class="chart-card-desc">
+      Mudança de Uso da Terra + Agropecuária respondem por 82% a 92% das emissões totais em cada ano.
+    </div>
+    <div class="chart-wrap tall"><canvas id="cStack" role="img" aria-label="Emissões de CO2 por setor empilhadas"></canvas></div>
+  </div>
+
+  <div class="insight dark reveal">
+    <div class="insight-icon" aria-hidden="true">⚠️</div>
+    <div>
+      <div class="insight-title">Achado principal</div>
+      <p class="insight-text">
+        A expansão do agronegócio no MATOPIBA — fronteira agrícola que inclui o Maranhão —
+        está diretamente correlacionada ao aumento de queimadas. O desmatamento para abertura
+        de pastos e lavouras é o principal vetor das emissões, respondendo por até
+        <strong>92% do CO₂ total em 2023</strong>. Focos de queimada funcionam como
+        proxy da intensidade desta pressão sobre a vegetação nativa.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     03 · CORRELAÇÃO
+═══════════════════════════════════════════════ -->
+<section id="correlacao" class="section" aria-labelledby="titulo-corr">
+  <div class="section-header reveal">
+    <span class="section-num">03</span>
+    <h2 class="section-title" id="titulo-corr">Correlação: Focos × CO₂</h2>
+  </div>
+
+  <div class="charts-2 reveal">
+    <div class="chart-card">
+      <div class="chart-card-title">CO₂ total × focos de queimada</div>
+      <div class="chart-card-desc">
+        Eixo esquerdo: focos. Eixo direito: CO₂ em Mt.
+        2023 — pico de CO₂ sem ser o ano com mais focos.
+      </div>
+      <div class="chart-wrap tall"><canvas id="cCorr" role="img" aria-label="Correlação entre focos e CO2"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">CO₂ por foco (t/foco)</div>
+      <div class="chart-card-desc">
+        Intensidade de emissão por foco detectado.
+        2023 apresenta o maior valor, sugerindo queimadas em vegetação mais densa.
+      </div>
+      <div class="chart-wrap tall"><canvas id="cIntensidade" role="img" aria-label="CO2 por foco de queimada por ano"></canvas></div>
+    </div>
+  </div>
+
+  <div class="insight navy reveal">
+    <div class="insight-icon" aria-hidden="true">📊</div>
+    <div>
+      <div class="insight-title">
+        Correlação de Pearson: r = {{ pearson_r }}
+        {% if pearson_r | abs >= 0.7 %}(forte)
+        {% elif pearson_r | abs >= 0.4 %}(moderada)
+        {% else %}(fraca){% endif %}
+      </div>
+      <p class="insight-text">
+        Focos e emissões estão correlacionados, mas não perfeitamente. Isso indica que
+        <strong>a localização e o tipo de vegetação queimada</strong> são tão relevantes
+        quanto o número bruto de focos. Queimadas na Amazônia e em matas ciliares
+        liberam mais CO₂ por foco do que no Cerrado degradado.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     04 · TABELA
+═══════════════════════════════════════════════ -->
+<section id="tabela" class="section section--alt" aria-labelledby="titulo-tabela">
+  <div class="section-header reveal">
+    <span class="section-num">04</span>
+    <h2 class="section-title" id="titulo-tabela">Dados Consolidados</h2>
+  </div>
+
+  <div class="table-wrap reveal">
+    <table aria-label="Dados consolidados de focos e emissões por ano">
+      <thead>
+        <tr>
+          <th scope="col">Ano</th>
+          <th scope="col">Focos</th>
+          <th scope="col">CO₂ Total (Mt)</th>
+          <th scope="col">MUT (Mt)</th>
+          <th scope="col">Agropec. (Mt)</th>
+          <th scope="col">% Agroneg.</th>
+          <th scope="col">CO₂/foco (t)</th>
+          <th scope="col">Intensidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in tabela_rows %}
+        <tr>
+          <td><strong>{{ row.ano }}</strong></td>
+          <td>{{ row.focos }}</td>
+          <td>{{ row.co2_total }}</td>
+          <td>{{ row.co2_mut }}</td>
+          <td>{{ row.co2_agro }}</td>
+          <td><span class="badge badge-fire">{{ row.pct_agro }}%</span></td>
+          <td>{{ row.co2_foco }}</td>
+          <td>
+            <div class="td-bar">
+              <div class="td-bar-fill" style="width:{{ row.barra_pct }}px;"></div>
+              <span style="font-size:.7rem;color:var(--ash)">{{ row.barra_pct }}%</span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <p class="table-note">
+    Fontes: INPE/BDQueimadas (focos de queimada) · SEEG/gases.csv (emissões de CO₂).
+    Filtro: municípios do Maranhão (MA). MUT = Mudança de Uso da Terra e Floresta.
+    Valores negativos de Agropecuária indicam sequestro líquido de carbono.
+  </p>
+</section>
+
+
+<!-- ── FOOTER ─────────────────────────────────────── -->
+<footer role="contentinfo">
+  <span><strong>Queimadas & Agronegócio no Maranhão</strong> · Análise 2019–2024</span>
+  <span>Dados: INPE · SEEG · Maranhão, Brasil</span>
+</footer>
+
+
+<!-- ═══════════════════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── Dados vindos do Flask via Jinja2 ─────────────
+const DATA = {
+  anos:      {{ anos      | tojson }},
+  focos:     {{ focos     | tojson }},
+  co2Total:  {{ co2_total | tojson }},
+  co2Mut:    {{ co2_mut   | tojson }},
+  co2Agro:   {{ co2_agro  | tojson }},
+  co2Outros: {{ co2_outros| tojson }},
+  co2Foco:   {{ co2_foco  | tojson }},
+  focosMes:  {{ focos_mes | tojson }},
+  biomas:    {{ biomas    | tojson }},
+};
+
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+// ── Paleta ───────────────────────────────────────
+const C = {
+  fire: '#E8501A', ember: '#F4923A',
+  agro: '#4A7C59', mut:   '#C4531F',
+  total:'#1C4E7A', ash:   '#9E9693',
+  amaz: '#1D9E75', cerr:  '#D85A30', caat: '#BA7517',
+};
+
+// ── Opções base ──────────────────────────────────
+const base = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+    y: { grid: { color: 'rgba(30,27,24,.07)' }, ticks: { font: { size: 11 } } },
+  }
+};
+
+// ── 1. Focos por ano ─────────────────────────────
+new Chart('cFocosAno', {
+  type: 'bar',
+  data: {
+    labels: DATA.anos,
+    datasets: [{
+      data: DATA.focos,
+      backgroundColor: DATA.anos.map((_, i) => i === DATA.anos.length - 1 ? C.fire : '#F0997B'),
+      borderRadius: 3, borderSkipped: false,
+    }]
+  },
+  options: {
+    ...base,
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: c => ` ${c.raw.toLocaleString('pt-BR')} focos` } }
+    }
+  }
+});
+
+// ── 2. Sazonalidade mensal ───────────────────────
+new Chart('cFocosMes', {
+  type: 'bar',
+  data: {
+    labels: MESES,
+    datasets: [{
+      data: DATA.focosMes,
+      backgroundColor: DATA.focosMes.map(v =>
+        v > 20000 ? C.fire : v > 8000 ? C.ember : '#F0C9B5'
+      ),
+      borderRadius: 3, borderSkipped: false,
+    }]
+  },
+  options: base
+});
+
+// ── 3. Biomas empilhados ─────────────────────────
+const biomaDatasets = Object.entries(DATA.biomas).map(([nome, vals]) => ({
+  label: nome,
+  data: vals,
+  backgroundColor: nome === 'Amazônia' ? C.amaz : nome === 'Cerrado' ? C.cerr : C.caat,
+  borderRadius: 0,
+}));
+
+new Chart('cBioma', {
+  type: 'bar',
+  data: { labels: DATA.anos, datasets: biomaDatasets },
+  options: {
+    ...base,
+    plugins: { legend: { display: true, position: 'top',
+      labels: { boxWidth: 12, font: { size: 11 } } } },
+    scales: {
+      x: { stacked: true, grid: { display: false } },
+      y: { stacked: true, grid: { color: 'rgba(30,27,24,.07)' } }
+    }
+  }
+});
+
+// ── 4. MUT ───────────────────────────────────────
+new Chart('cMut', {
+  type: 'line',
+  data: {
+    labels: DATA.anos,
+    datasets: [{
+      data: DATA.co2Mut, borderColor: C.mut, backgroundColor: C.mut + '22',
+      fill: true, tension: .35, borderWidth: 2,
+      pointRadius: 4, pointBackgroundColor: '#fff',
+      pointBorderColor: C.mut, pointBorderWidth: 2,
+    }]
+  },
+  options: {
+    ...base,
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+      y: { grid: { color: 'rgba(30,27,24,.07)' },
+           ticks: { font: { size: 10 }, callback: v => v + ' Mt' } }
+    }
+  }
+});
+
+// ── 5. Agropecuária ──────────────────────────────
+new Chart('cAgro', {
+  type: 'line',
+  data: {
+    labels: DATA.anos,
+    datasets: [{
+      data: DATA.co2Agro, borderColor: C.agro, backgroundColor: C.agro + '22',
+      fill: true, tension: .35, borderWidth: 2,
+      pointRadius: 4, pointBackgroundColor: '#fff',
+      pointBorderColor: C.agro, pointBorderWidth: 2,
+    }]
+  },
+  options: {
+    ...base,
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+      y: { grid: { color: 'rgba(30,27,24,.07)' },
+           ticks: { font: { size: 10 }, callback: v => v + ' Mt' } }
+    }
+  }
+});
+
+// ── 6. Stack setores ─────────────────────────────
+new Chart('cStack', {
+  type: 'bar',
+  data: {
+    labels: DATA.anos,
+    datasets: [
+      { label: 'Outros setores', data: DATA.co2Outros,              backgroundColor: '#C8BFB8' },
+      { label: 'Agropecuária',   data: DATA.co2Agro.map(Math.abs),  backgroundColor: C.agro   },
+      { label: 'Mudança de Uso', data: DATA.co2Mut,                 backgroundColor: C.mut    },
+    ]
+  },
+  options: {
+    ...base,
+    plugins: { legend: { display: true, position: 'top',
+      labels: { boxWidth: 12, font: { size: 11 } } } },
+    scales: {
+      x: { stacked: true, grid: { display: false } },
+      y: { stacked: true, grid: { color: 'rgba(30,27,24,.07)' },
+           ticks: { callback: v => v + ' Mt' } }
+    }
+  }
+});
+
+// ── 7. Correlação eixo duplo ─────────────────────
+new Chart('cCorr', {
+  data: {
+    labels: DATA.anos,
+    datasets: [
+      {
+        type: 'bar', label: 'Focos',
+        data: DATA.focos, yAxisID: 'yF', order: 2,
+        backgroundColor: '#F0997B', borderColor: C.fire,
+        borderWidth: 1, borderRadius: 3,
+      },
+      {
+        type: 'line', label: 'CO₂ (Mt)',
+        data: DATA.co2Total, yAxisID: 'yC', order: 1,
+        borderColor: C.total, backgroundColor: 'transparent',
+        borderWidth: 2.5, borderDash: [6, 3],
+        pointRadius: 5, pointBackgroundColor: '#fff',
+        pointBorderColor: C.total, pointBorderWidth: 2,
+        tension: .3,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: true, position: 'top',
+      labels: { boxWidth: 12, font: { size: 11 } } } },
+    scales: {
+      x: { grid: { display: false } },
+      yF: { position: 'left',
+            title: { display: true, text: 'Focos', font: { size: 10 } },
+            grid: { color: 'rgba(30,27,24,.07)' } },
+      yC: { position: 'right',
+            title: { display: true, text: 'CO₂ (Mt)', font: { size: 10 } },
+            grid: { drawOnChartArea: false } },
+    }
+  }
+});
+
+// ── 8. CO₂ por foco ──────────────────────────────
+new Chart('cIntensidade', {
+  type: 'line',
+  data: {
+    labels: DATA.anos,
+    datasets: [{
+      data: DATA.co2Foco, borderColor: C.total, backgroundColor: C.total + '18',
+      fill: true, tension: .35, borderWidth: 2.5,
+      pointRadius: 5, pointBackgroundColor: '#fff',
+      pointBorderColor: C.total, pointBorderWidth: 2.5,
+    }]
+  },
+  options: {
+    ...base,
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: 'rgba(30,27,24,.07)' },
+           ticks: { callback: v => v.toLocaleString('pt-BR') + ' t' } }
+    }
+  }
+});
+
+// ── Scroll reveal ─────────────────────────────────
+const obs = new IntersectionObserver(
+  entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+  { threshold: 0.07 }
+);
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+
+</body>
+</html>
